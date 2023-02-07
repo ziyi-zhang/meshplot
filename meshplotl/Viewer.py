@@ -131,7 +131,7 @@ class Viewer():
                 colors[:, 1] = 0.874
                 colors[:, 2] = 0.0
         elif type(c) == np.ndarray and c.size == f.shape[0]: # Function values for faces
-            normalize = sh["normalize"][0] != None and sh["normalize"][1] != None
+            normalize = sh["normalize"][0] == None or sh["normalize"][1] == None
             cc = get_colors(c, sh["colormap"], normalize=normalize,
                        vmin=sh["normalize"][0], vmax=sh["normalize"][1])
             #print(cc.shape)
@@ -139,7 +139,7 @@ class Viewer():
             coloring = "FaceColors"
             #print("Face function values")
         elif type(c) == np.ndarray and c.size == v.shape[0]: # Function values for vertices
-            normalize = sh["normalize"][0] != None and sh["normalize"][1] != None
+            normalize = sh["normalize"][0] == None or sh["normalize"][1] == None
             colors = get_colors(c, sh["colormap"], normalize=normalize,
                        vmin=sh["normalize"][0], vmax=sh["normalize"][1])
             #print("Vertex function values")
@@ -167,7 +167,7 @@ class Viewer():
         elif type(c) == np.ndarray and len(c.shape) == 2 and c.shape[1] == 3 and c.shape[0] == v.shape[0]: # Point color
             colors = c.astype("float32", copy=False)
         elif type(c) == np.ndarray and c.size == v.shape[0]: # Function color
-            normalize = sh["normalize"][0] != None and sh["normalize"][1] != None
+            normalize = sh["normalize"][0] == None or sh["normalize"][1] == None
             colors = get_colors(c, sh["colormap"], normalize=normalize,
                        vmin=sh["normalize"][0], vmax=sh["normalize"][1])
             colors = colors.astype("float32", copy=False)

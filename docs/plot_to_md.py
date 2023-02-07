@@ -1,8 +1,8 @@
-import meshplot
+import meshplotl
 import json
 
 first = True
-meshplot.website()
+meshplotl.website()
 
 def mp_to_md(self):
     global first
@@ -31,6 +31,6 @@ def lis_to_md(self):
             res += e.to_html()
     return res
 
-get_ipython().display_formatter.formatters["text/html"].for_type(meshplot.Viewer, mp_to_md)
-get_ipython().display_formatter.formatters["text/html"].for_type(meshplot.Subplot, sp_to_md)
+get_ipython().display_formatter.formatters["text/html"].for_type(meshplotl.Viewer, mp_to_md)
+get_ipython().display_formatter.formatters["text/html"].for_type(meshplotl.Subplot, sp_to_md)
 #get_ipython().display_formatter.formatters["text/html"].for_type(list, lis_to_md)
