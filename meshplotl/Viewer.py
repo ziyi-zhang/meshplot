@@ -377,7 +377,7 @@ class Viewer():
     def update_object(self, oid=0, vertices=None, colors=None, faces=None):
         obj = self.__objects[oid]
         if type(vertices) != type(None):
-            if obj["coloring"] == "FaceColors":
+            if hasattr(obj, "coloring") and obj["coloring"] == "FaceColors":
                 f = obj["arrays"][1]
                 verts = np.zeros((f.shape[0]*3, 3), dtype="float32")
                 for ii in range(f.shape[0]):
@@ -394,8 +394,13 @@ class Viewer():
             obj["geometry"].attributes["position"].needsUpdate = True
  #           obj["geometry"].exec_three_obj_method('computeVertexNormals')
         if type(colors) != type(None):
-            colors, coloring = self.__get_colors(obj["arrays"][0], obj["arrays"][1], colors, obj["shading"])
-            colors = colors.astype("float32", copy=False)
+            if 'mesh' in obj and isinstance(obj['mesh'], p3s.Points):
+                # Update the color of points
+                colors = colors.astype("float32", copy=False)
+            else:
+                # Update the color of the mesh
+                colors, coloring = self.__get_colors(obj["arrays"][0], obj["arrays"][1], colors, obj["shading"])
+                colors = colors.astype("float32", copy=False)
             obj["geometry"].attributes["color"].array = colors
             obj["geometry"].attributes["color"].needsUpdate = True
         if type(faces) != type(None):
@@ -403,7 +408,7 @@ class Viewer():
                 print("Face updates are currently only possible in vertex color mode.")
                 return
             f = faces.astype("uint32", copy=False).ravel()
-            print(obj["geometry"].attributes)
+            # print(obj["geometry"].attributes)
             obj["geometry"].attributes["index"].array = f
             #self.wireframe.attributes["position"].array = v # Wireframe updates?
             obj["geometry"].attributes["index"].needsUpdate = True
@@ -419,7 +424,7 @@ class Viewer():
 #        self.mesh.exec_three_obj_method('update')
 #        self.orbit.exec_three_obj_method('update')
 #        self.cam.exec_three_obj_method('updateProjectionMatrix')
-#        self.scene.exec_three_obj_method('update')
+#        self._scene.exec_three_obj_method('update')
 
 
     def add_text(self, text, shading={}, **kwargs):
@@ -428,7 +433,27 @@ class Viewer():
         tt = p3s.TextTexture(string=text, color=sh["text_color"])
         sm = p3s.SpriteMaterial(map=tt)
         self.text = p3s.Sprite(material=sm, scaleToTexture=True)
-        self.scene.add(self.text)
+        self._scene.add(self.text)
+
+    def add_slider(self, min_x, max_x, step=0.01, callback=None, description=''):
+        """
+        Adds a slider widget to control which vertices are displayed based on their x-coordinate.
+        :param min_x: Minimum value of the x-coordinate for the slider.
+        :param max_x: Maximum value of the x-coordinate for the slider.
+        :param step: Step size for the slider's values.
+        :param callback: Function to be called when the slider value changes.
+        """
+        slider = widgets.FloatSlider(
+            value=min_x,
+            min=min_x,
+            max=max_x,
+            step=step,
+            description=description,
+            continuous_update=False)
+        if callback is not None:
+            slider.observe(callback, names='value')
+        display(slider)
+
 
     #def add_widget(self, widget, callback):
     #    self.widgets.append(widget)
@@ -461,8 +486,9 @@ class Viewer():
         diag = np.linalg.norm(ma-mi)
         mean = (ma - mi) / 2 + mi
         for r, obj in enumerate(self.__objects):
-            v = self.__objects[obj]["geometry"].attributes["position"].array
-            v -= mean
+            if hasattr(self.__objects[obj], "geometry"):
+                v = self.__objects[obj]["geometry"].attributes["position"].array
+                v -= mean
 
         scale = self.__s["scale"] * (diag)
         self._orbit.target = [0.0, 0.0, 0.0]
@@ -495,8 +521,9 @@ class Viewer():
 
         # Revert changes
         for r, obj in enumerate(self.__objects):
-            v = self.__objects[obj]["geometry"].attributes["position"].array
-            v += mean
+            if hasattr(self.__objects[obj], "geometry"):
+                v = self.__objects[obj]["geometry"].attributes["position"].array
+                v += mean
         self.__update_view()
 
         return s
