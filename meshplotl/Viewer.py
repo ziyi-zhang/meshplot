@@ -376,23 +376,31 @@ class Viewer():
 
     def update_object(self, oid=0, vertices=None, colors=None, faces=None):
         obj = self.__objects[oid]
-        if type(vertices) != type(None):
-            if hasattr(obj, "coloring") and obj["coloring"] == "FaceColors":
-                f = obj["arrays"][1]
-                verts = np.zeros((f.shape[0]*3, 3), dtype="float32")
-                for ii in range(f.shape[0]):
-                    #print(ii*3, f[ii])
-                    verts[ii*3] = vertices[f[ii,0]]
-                    verts[ii*3+1] = vertices[f[ii,1]]
-                    verts[ii*3+2] = vertices[f[ii,2]]
-                v = verts
 
-            else:
-                v = vertices.astype("float32", copy=False)
-            obj["geometry"].attributes["position"].array = v
-            #self.wireframe.attributes["position"].array = v # Wireframe updates?
-            obj["geometry"].attributes["position"].needsUpdate = True
- #           obj["geometry"].exec_three_obj_method('computeVertexNormals')
+        if vertices is not None:
+            if obj["type"] == "Lines":  # Add support for Lines
+                lines = vertices.astype("float32", copy=False).reshape((-1, 2, 3))
+                # Create a new LineSegmentsGeometry with the updated positions
+                new_geometry = p3s.LineSegmentsGeometry(positions=lines)
+                # Replace the old geometry with the new one
+                obj["mesh"].geometry = new_geometry
+            else:  # mesh / points
+                if hasattr(obj, "coloring") and obj["coloring"] == "FaceColors":
+                    f = obj["arrays"][1]
+                    verts = np.zeros((f.shape[0]*3, 3), dtype="float32")
+                    for ii in range(f.shape[0]):
+                        #print(ii*3, f[ii])
+                        verts[ii*3] = vertices[f[ii,0]]
+                        verts[ii*3+1] = vertices[f[ii,1]]
+                        verts[ii*3+2] = vertices[f[ii,2]]
+                    v = verts
+                else:
+                    v = vertices.astype("float32", copy=False)
+                obj["geometry"].attributes["position"].array = v
+                #self.wireframe.attributes["position"].array = v # Wireframe updates?
+                obj["geometry"].attributes["position"].needsUpdate = True
+    #           obj["geometry"].exec_three_obj_method('computeVertexNormals')
+
         if type(colors) != type(None):
             if 'mesh' in obj and isinstance(obj['mesh'], p3s.Points):
                 # Update the color of points
@@ -403,6 +411,7 @@ class Viewer():
                 colors = colors.astype("float32", copy=False)
             obj["geometry"].attributes["color"].array = colors
             obj["geometry"].attributes["color"].needsUpdate = True
+
         if type(faces) != type(None):
             if obj["coloring"] == "FaceColors":
                 print("Face updates are currently only possible in vertex color mode.")
